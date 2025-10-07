@@ -1,4 +1,3 @@
-# retirement_lifestyle_full.py
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -7,9 +6,8 @@ from datetime import datetime
 import yfinance as yf
 import math
 
-st.set_page_config(page_title="Retirement & Household Simulator (Full)", layout="wide")
+st.set_page_config(page_title="Retirement & Household Simulator", layout="wide")
 
-# -------------------- Helper finance & simulation functions --------------------
 def years_to_retirement(age, retirement_age):
     return max(0, retirement_age - age)
 
@@ -18,10 +16,10 @@ def annual_medical_cost_for_member(member_age, member_diseases, has_insurance, p
                                    medical_inflation=0.10, years_from_now=0):
     """
     Estimate annual medical cost for one member.
-    - base_visit_cost: cost per doctor visit assumed already counted elsewhere.
-    - member_diseases: list of strings.
-    - medical_inflation: annual medical inflation rate used when projecting costs into future.
-    - years_from_now: used when projecting cost to retirement (inflate).
+    base_visit_cost: cost per doctor visit assumed already counted elsewhere.
+    member_diseases: list of strings.
+    medical_inflation: annual medical inflation rate used when projecting costs into future.
+    years_from_now: used when projecting cost to retirement (inflate).
     Age multiplier: costs increase after age 40 progressively.
     """
     if base_disease_map is None:
@@ -29,9 +27,9 @@ def annual_medical_cost_for_member(member_age, member_diseases, has_insurance, p
             "Diabetes": 20000, "Cancer": 100000, "Heart disease": 50000,
             "Kidney disease": 40000, "Lung disease": 30000, "Stomach disease": 20000
         }
-    # Sum base disease costs
+    # Sum of base disease costs
     disease_sum = sum(base_disease_map.get(d, 0) for d in member_diseases)
-    # Age adjustment multiplier: +3% per year after 40
+    # Age adjustment multiplier: +3% per year after 40 years
     age_adj = 1.0
     if member_age > 40:
         age_adj += 0.03 * (member_age - 40)
@@ -168,7 +166,6 @@ def montecarlo_accumulate_and_decumulate(init_portfolio, yearly_contribution, ye
     success_rate = np.mean(finals >= 0)
     return success_rate, finals, percentiles, full_paths
 
-# -------------------- New helpers (Emergency fund & required-income calc) --------------------
 def get_currency_symbol(country_name):
     # simple mapping; extendable
     c = country_name.strip().lower()
@@ -273,8 +270,8 @@ def compute_annual_emi(loan_amount, annual_rate, tenure_years):
         monthly_emi = loan_amount * (monthly_r * (1 + monthly_r) ** n) / ((1 + monthly_r) ** n - 1)
     return monthly_emi * 12.0
 
-# -------------------- UI Inputs --------------------
-st.title("Retirement + Household + Investments Simulator (Full)")
+# Next we build the User Interface of the Application
+st.title("Retirement + Household + Investments Simulator")
 
 with st.sidebar:
     st.header("Personal & Location")
@@ -313,18 +310,18 @@ with st.sidebar:
     fallback_stock_return = st.slider("Fallback expected stock annual return (%)", 0.0, 30.0, 8.0, 0.1)/100.0
 
     st.markdown("---")
-    st.header("Consumption - Grocery & Food (monthly amounts)")
+    st.header("Consumption - Grocery & Food")
     monthly_veg = st.number_input("Vegetables (monthly ₹)", 0.0, 200000.0, 4000.0)
     monthly_fruits = st.number_input("Fruits (monthly ₹)", 0.0, 200000.0, 2000.0)
     monthly_spices = st.number_input("Spices (monthly ₹)", 0.0, 50000.0, 500.0)
     monthly_oats = st.number_input("Oats/Cereals (monthly ₹)", 0.0, 50000.0, 500.0)
     monthly_oils = st.number_input("Oils (monthly ₹)", 0.0, 50000.0, 1500.0)
     monthly_nonveg = st.number_input("Non-veg (monthly ₹)", 0.0, 200000.0, 5000.0)
-
-    st.markdown("---")
-    st.header("Other food & habits")
     rotis_per_person = st.slider("Avg rotis per person per day", 0, 20, 4)
     rice_kg_per_person = st.slider("Rice kg per person per day", 0.0, 1.5, 0.25, 0.05)
+    
+    st.markdown("---")
+    st.header("Other food & habits") 
     restaurants_per_month = st.slider("Restaurant visits per month", 0, 40, 2)
     fast_food_per_week = st.slider("Fast food meals per week", 0, 30, 2)
 
@@ -335,23 +332,23 @@ with st.sidebar:
     monthly_emi = st.number_input("Total monthly EMIs (₹)", 0.0, 2_000_000.0, 15000.0)
     electricity_monthly = st.number_input("Monthly electricity bill (₹)", 0.0, 200000.0, 3000.0)
     mobile_monthly = st.number_input("Monthly mobile bill (₹)", 0.0, 50000.0, 1000.0)
-    tv_internet_monthly = st.number_input("Monthly TV/Internet (₹)", 0.0, 200000.0, 1000.0)
-    other_bills_monthly = st.number_input("Other monthly bills including house rent, if any (₹)", 0.0, 200000.0, 2000.0)
+    tv_internet_monthly = st.number_input("Monthly TV/Internet bill (₹)", 0.0, 200000.0, 1000.0)
+    other_bills_monthly = st.number_input("Other monthly expenses including house rent, if any (₹)", 0.0, 200000.0, 2000.0)
 
     st.markdown("---")
-    st.header("Travel & Major Purchases (realistic assumptions)")
-    # realistic defaults: 5 domestic trips per year
-    domestic_trips_per_year = st.number_input("Domestic trips per year (estimate)", 0, 20, 5)
+    st.header("Travel & Major Purchases")
+    # realistic defaults: 3 domestic trips per year
+    domestic_trips_per_year = st.number_input("Domestic trips per year (estimate)", 0, 20, 3)
     avg_domestic_trip_cost = st.number_input("Average cost per domestic trip (₹)", 0.0, 1_000_000.0, 30000.0)
     international_trips_per_year = st.number_input("International trips per year (estimate)", 0, 10, 0)
     avg_international_trip_cost = st.number_input("Average cost per international trip (₹)", 0.0, 5_000_000.0, 120000.0)
 
-    car_purchase_in_years = st.number_input("Car purchase in how many years from now?", 0, 30, 2)
+    car_purchase_in_years = st.number_input("How many years from now do you want to purchase a new Car?", 0, 30, 2)
     car_price_input = st.number_input("Expected Car purchase price (₹)", 0.0, 1e9, 800_000.0)
     car_loan_years = st.number_input("Car loan tenure (years)", 1, 20, 5)
     car_interest = st.slider("Car loan annual interest (%)", 0.0, 20.0, 9.0)/100.0
 
-    house_purchase_in_years = st.number_input("House purchase in how many years from now?", 0, 30, 3)
+    house_purchase_in_years = st.number_input("How many years from now you want to purchase a new house?", 0, 30, 3)
     house_price_input = st.number_input("Expected House price (₹)", 0.0, 1e10, 5_000_000.0)
     house_loan_years = st.number_input("House loan tenure (years)", 5, 30, 15)
     house_interest = st.slider("House loan annual interest (%)", 0.0, 20.0, 7.0)/100.0
@@ -389,7 +386,6 @@ with st.sidebar:
     st.markdown("---")
     st.button("Recalculate / Run Simulations below")
 
-# -------------------- Derived Investment calculations --------------------
 years_left = years_to_retirement(age, retirement_age)
 
 # parse stocks
@@ -425,7 +421,7 @@ if years_left > 0:
 else:
     investment_income_est = 0.0
 
-# -------------------- Consumption calculations (current & projected) --------------------
+# Current and Pojected Consumption calculations
 # current medical cost (now)
 medical_cost_now = total_medical_cost_for_household(members, medical_inflation, years_from_now=0)
 
@@ -591,12 +587,12 @@ annual_savings_req_consumption = annual_savings_needed(current_investments, targ
 total_income_now = annual_salary + investment_income_est
 net_surplus_now = max(0.0, total_income_now - annual_consumption_now)
 
-# -------------------- New: Emergency fund computation --------------------
+# Emergency fund computation
 emergency_info = compute_emergency_fund(annual_consumption_now, members, medical_inflation, years_from_now=0)
 emergency_required = emergency_info["emergency_required"]
 emergency_shortfall_now = max(0.0, emergency_required - current_investments)
 
-# -------------------- New: Required-income to meet retirement + 10-year house/car/luxury goal --------------------
+# Required-income to meet retirement + 10-year house/car/luxury goal
 # Default price assumptions (you can change these or add inputs if you want)
 default_house_price = 5_000_000   # 50 lakh
 default_car_price = 800_000     # 8 lakh
@@ -640,7 +636,7 @@ def lifestyle_affordability(surplus_per_year, income, consumption, years_left):
 
 afford_info = lifestyle_affordability(net_surplus_now, total_income_now, annual_consumption_now, years_left)
 
-# -------------------- Simulation setup --------------------
+# Simulation setup
 # Prepare portfolio expected return & volatility estimate from components
 total_current = current_investments + sip_monthly*12*sip_years_effective + mf_current + total_stock_current
 if total_current <= 0:
@@ -687,7 +683,7 @@ if 0 <= house_purchase_in_years < years_accum:
     house_downpayment = -1.0 * (house_price_at_purchase * downpayment_share)
     cashflow_schedule[int(house_purchase_in_years)] = cashflow_schedule.get(int(house_purchase_in_years), 0.0) + house_downpayment
 
-# -------------------- Simulation button and run
+# Simulation button and run
 st.header("Overview & Results")
 currency_symbol = get_currency_symbol(country)
 
@@ -764,7 +760,7 @@ if st.button("Run Monte Carlo simulation (accumulate + decumulate)"):
     plt.title("Sample Monte Carlo portfolio paths")
     st.pyplot(plt.gcf())
 
-# -------------------- Detailed outputs & breakdown --------------------
+# Detailed outputs & breakdown
 st.markdown("---")
 st.subheader("Detailed Consumption & Projections")
 tabs = st.tabs(["Now", "At Retirement", "+15 years", "+30 years", "Investments"])
@@ -827,7 +823,7 @@ st.write(f"- Required income to improve lifestyle by 50% at retirement (annual c
 for k, v in afford_info.items():
     st.write(f"- {k.capitalize()}: {v}")
 
-# -------------------- New: Emergency fund & required-income summary --------------------
+#  New: Emergency fund & required-income summary
 st.markdown("---")
 st.subheader("Emergency Fund (health-driven)")
 
@@ -855,7 +851,7 @@ if required_income_gap > 0:
 else:
     st.success("Your current income is sufficient (by this estimate) to meet retirement savings and the 10-year house/car/luxury goals under the given assumptions.")
 
-# -------------------- Export summary --------------------
+# Export summary
 if st.button("Download full summary CSV"):
     summary = {
         "timestamp": [datetime.utcnow().isoformat()],
